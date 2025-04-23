@@ -2,50 +2,65 @@ services:
   database:
     image: postgres:16.1-alpine
     container_name: pg-database
+    restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: module1
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   main-service:
     image: iraavas/main-service
     container_name: spring-boot-app
+    restart: always
     depends_on:
       database:
         condition: service_healthy
     ports:
-      - "8081:8081"
-    environment:
-      DB_HOST: database
-      DB_PORT: 5432
-      DB_NAME: module1
-      DB_USERNAME: postgres
-      DB_PASSWORD: postgres
-      SPRING_FLYWAY_ENABLED: true
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      - "${MAIN_SERVICE_PORT}:8081"
     networks:
       - app-network
+    mem_limit: ${APP_MEM_LIMIT}
+    cpus: ${APP_CPU_LIMIT}
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SPRING_FLYWAY_ENABLED: true
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SHOW_SQL: ${SHOW_SQL}
+      TOMCAT_THREADS: ${TOMCAT_THREADS}
 
   additional-service:
     image: iraavas/additional-service
     container_name: additional-service
+    restart: always
     depends_on:
       - main-service
     ports:
-      - "8082:8082"
+      - "${ADDITIONAL_SERVICE_PORT}:8082"
     networks:
       - app-network
+    mem_limit: ${APP_MEM_LIMIT}
+    cpus: ${APP_CPU_LIMIT}
+    environment:
+      MAIN_SERVICE_HOST: ${MAIN_SERVICE_HOST}
+      MAIN_SERVICE_PORT: ${MAIN_SERVICE_PORT}
+      SERVER_PORT: ${ADDITIONAL_SERVICE_PORT}
+      TOMCAT_THREADS: ${TOMCAT_THREADS}
 
 volumes:
   postgres_data:

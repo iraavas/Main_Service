@@ -6,7 +6,10 @@ import requests
 from datetime import datetime, timedelta
 
 fake = Faker("ru_RU")
-BASE_URL = os.getenv("MAIN_SERVICE_URL", "http://localhost:8081")
+MAIN_HOST = os.getenv("MAIN_SERVICE_HOST", "localhost")
+MAIN_PORT = os.getenv("MAIN_SERVICE_PORT", "8081")
+BASE_URL = f"http://{MAIN_HOST}:{MAIN_PORT}"
+
 
 def clear_all():
     requests.delete(f"{BASE_URL}/clear")
