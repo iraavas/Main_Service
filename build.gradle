@@ -40,3 +40,10 @@ tasks.named('bootJar') {
 	archiveFileName = 'app.jar'
 	mainClass = 'ru.hpclab.hl.module1.Module1Application'
 }
+
+tasks.named('jar') {
+	enabled = false
+}
+
+
+

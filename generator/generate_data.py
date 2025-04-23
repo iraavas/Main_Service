@@ -1,11 +1,12 @@
 import argparse
+import os
 import random
 from faker import Faker
 import requests
 from datetime import datetime, timedelta
 
 fake = Faker("ru_RU")
-BASE_URL = "http://localhost:8081"
+BASE_URL = os.getenv("MAIN_SERVICE_URL", "http://localhost:8081")
 
 def clear_all():
     requests.delete(f"{BASE_URL}/clear")
@@ -117,8 +118,8 @@ def populate(endpoint, count):
             requests.post(f"{BASE_URL}/appointments", json=appointment)
 
     else:
-        print(f"❌ Ошибка: неизвестный endpoint '{endpoint}'")
-        print("✅ Допустимые значения: patients, doctors, appointments, all")
+        print(f"Ошибка: неизвестный endpoint '{endpoint}'")
+        print("Допустимые значения: patients, doctors, appointments, all")
 
 def main():
     parser = argparse.ArgumentParser(description="Генератор тестовых данных для REST-сервиса")
