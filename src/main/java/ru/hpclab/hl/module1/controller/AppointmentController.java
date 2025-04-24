@@ -3,8 +3,8 @@ package ru.hpclab.hl.module1.controller;
 import org.springframework.web.bind.annotation.*;
 import ru.hpclab.hl.module1.dto.AppointmentDTO;
 import ru.hpclab.hl.module1.service.AppointmentService;
+import ru.hpclab.hl.module1.service.statistics.ObservabilityService;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -12,51 +12,60 @@ import java.util.List;
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
+    private final ObservabilityService observabilityService;
 
-    public AppointmentController(AppointmentService appointmentService) {
+    public AppointmentController(AppointmentService appointmentService, ObservabilityService observabilityService) {
         this.appointmentService = appointmentService;
+        this.observabilityService = observabilityService;
     }
 
-    // Получить список всех записей (приёмов)
     @GetMapping
     public List<AppointmentDTO> getAllAppointments() {
-        return appointmentService.getAllAppointments();
+        observabilityService.start("controller.appointments.getAll");
+        try {
+            return appointmentService.getAllAppointments();
+        } finally {
+            observabilityService.stop("controller.appointments.getAll");
+        }
     }
 
-    // Получить конкретный приём по ID
     @GetMapping("/{id}")
     public AppointmentDTO getAppointmentById(@PathVariable Long id) {
-        return appointmentService.getAppointmentById(id);
+        observabilityService.start("controller.appointments.getById");
+        try {
+            return appointmentService.getAppointmentById(id);
+        } finally {
+            observabilityService.stop("controller.appointments.getById");
+        }
     }
 
-    // Создать запись на приём
     @PostMapping
     public AppointmentDTO addAppointment(@RequestBody AppointmentDTO appointmentDTO) {
-        // В сервисе будет проверка: доступен ли врач (по дате/времени) + совпадает ли специализация, если нужно
-        return appointmentService.saveAppointment(appointmentDTO);
+        observabilityService.start("controller.appointments.add");
+        try {
+            return appointmentService.saveAppointment(appointmentDTO);
+        } finally {
+            observabilityService.stop("controller.appointments.add");
+        }
     }
 
-    // Удалить запись на приём
     @DeleteMapping("/{id}")
     public void deleteAppointment(@PathVariable Long id) {
-        appointmentService.deleteAppointment(id);
+        observabilityService.start("controller.appointments.delete");
+        try {
+            appointmentService.deleteAppointment(id);
+        } finally {
+            observabilityService.stop("controller.appointments.delete");
+        }
     }
 
-    // Обновить запись на приём
     @PutMapping("/{id}")
     public AppointmentDTO updateAppointment(@PathVariable Long id, @RequestBody AppointmentDTO appointmentDTO) {
-        return appointmentService.updateAppointment(id, appointmentDTO);
+        observabilityService.start("controller.appointments.update");
+        try {
+            return appointmentService.updateAppointment(id, appointmentDTO);
+        } finally {
+            observabilityService.stop("controller.appointments.update");
+        }
     }
-
-    // Новый метод для проверки доступности врача по специализации и времени
-    //@GetMapping("/check-doctor-availability")
-    //public boolean checkDoctorAvailability(
-    //       @RequestParam String specialization,
-    //       @RequestParam String appointmentDate) {
-        // Парсим строку времени
-    //   LocalDateTime appointmentDateTime = LocalDateTime.parse(appointmentDate);
-
-        // Проверяем доступность врача
-    //   return appointmentService.isDoctorAvailable(specialization, appointmentDateTime);
-    //}
 }

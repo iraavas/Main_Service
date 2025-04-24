@@ -6,8 +6,8 @@ import ru.hpclab.hl.module1.entity.DoctorEntity;
 import ru.hpclab.hl.module1.mapper.DoctorMapper;
 import ru.hpclab.hl.module1.repository.AppointmentRepository;
 import ru.hpclab.hl.module1.repository.DoctorRepository;
+import ru.hpclab.hl.module1.service.statistics.ObservabilityService;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -17,47 +17,69 @@ public class DoctorService {
 
     private final DoctorRepository doctorRepository;
     private final AppointmentRepository appointmentRepository;
+    private final ObservabilityService observabilityService;
 
-
-    public DoctorService(DoctorRepository doctorRepository, AppointmentRepository appointmentRepository) {
+    public DoctorService(DoctorRepository doctorRepository,
+                         AppointmentRepository appointmentRepository,
+                         ObservabilityService observabilityService) {
         this.doctorRepository = doctorRepository;
         this.appointmentRepository = appointmentRepository;
+        this.observabilityService = observabilityService;
     }
 
     public List<DoctorDTO> getAllDoctors() {
-        return doctorRepository.findAll().stream()
-                .map(DoctorMapper::toDTO)
-                .collect(Collectors.toList());
+        observabilityService.start("service.doctor.getAll");
+        try {
+            return doctorRepository.findAll().stream()
+                    .map(DoctorMapper::toDTO)
+                    .collect(Collectors.toList());
+        } finally {
+            observabilityService.stop("service.doctor.getAll");
+        }
     }
 
     public DoctorDTO getDoctorById(Long id) {
-        Optional<DoctorEntity> doctorEntity = doctorRepository.findById(id);
-        return doctorEntity.map(DoctorMapper::toDTO).orElse(null);
+        observabilityService.start("service.doctor.getById");
+        try {
+            Optional<DoctorEntity> doctorEntity = doctorRepository.findById(id);
+            return doctorEntity.map(DoctorMapper::toDTO).orElse(null);
+        } finally {
+            observabilityService.stop("service.doctor.getById");
+        }
     }
 
     public DoctorDTO saveDoctor(DoctorDTO doctorDTO) {
-        DoctorEntity entity = DoctorMapper.toEntity(doctorDTO);
-        return DoctorMapper.toDTO(doctorRepository.save(entity));
+        observabilityService.start("service.doctor.save");
+        try {
+            DoctorEntity entity = DoctorMapper.toEntity(doctorDTO);
+            return DoctorMapper.toDTO(doctorRepository.save(entity));
+        } finally {
+            observabilityService.stop("service.doctor.save");
+        }
     }
 
     public DoctorDTO updateDoctor(Long id, DoctorDTO newDoctorDTO) {
-        return doctorRepository.findById(id)
-                .map(existingDoctor -> {
-                    existingDoctor.setFio(newDoctorDTO.getFio());
-                    existingDoctor.setSpecialization(newDoctorDTO.getSpecialization());
-                    existingDoctor.setWorkSchedule(newDoctorDTO.getWorkSchedule());
-                    return DoctorMapper.toDTO(doctorRepository.save(existingDoctor));
-                })
-                .orElse(null);
+        observabilityService.start("service.doctor.update");
+        try {
+            return doctorRepository.findById(id)
+                    .map(existingDoctor -> {
+                        existingDoctor.setFio(newDoctorDTO.getFio());
+                        existingDoctor.setSpecialization(newDoctorDTO.getSpecialization());
+                        existingDoctor.setWorkSchedule(newDoctorDTO.getWorkSchedule());
+                        return DoctorMapper.toDTO(doctorRepository.save(existingDoctor));
+                    })
+                    .orElse(null);
+        } finally {
+            observabilityService.stop("service.doctor.update");
+        }
     }
 
     public void deleteDoctor(Long id) {
-        doctorRepository.deleteById(id);
+        observabilityService.start("service.doctor.delete");
+        try {
+            doctorRepository.deleteById(id);
+        } finally {
+            observabilityService.stop("service.doctor.delete");
+        }
     }
-
-    // Проверка доступности врача по специализации и времени
-    // public boolean isDoctorAvailable(String specialization, LocalDateTime appointmentDate) {
-    //   Long count = appointmentRepository.countAppointmentsForSpecializationAtTime(specialization, appointmentDate);
-    //   return count == 0; // Если записей нет, значит врач доступен
-    //}
 }

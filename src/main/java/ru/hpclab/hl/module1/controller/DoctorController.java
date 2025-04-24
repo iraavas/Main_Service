@@ -1,12 +1,10 @@
 package ru.hpclab.hl.module1.controller;
 
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.hpclab.hl.module1.dto.DoctorDTO;
 import ru.hpclab.hl.module1.service.DoctorService;
+import ru.hpclab.hl.module1.service.statistics.ObservabilityService;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -14,47 +12,60 @@ import java.util.List;
 public class DoctorController {
 
     private final DoctorService doctorService;
+    private final ObservabilityService observabilityService;
 
-    // Внедрение через конструктор
-    public DoctorController(DoctorService doctorService) {
+    public DoctorController(DoctorService doctorService, ObservabilityService observabilityService) {
         this.doctorService = doctorService;
+        this.observabilityService = observabilityService;
     }
 
-    // Получить список всех врачей
     @GetMapping
     public List<DoctorDTO> getAllDoctors() {
-        return doctorService.getAllDoctors();
+        observabilityService.start("controller.doctors.getAll");
+        try {
+            return doctorService.getAllDoctors();
+        } finally {
+            observabilityService.stop("controller.doctors.getAll");
+        }
     }
 
-    // Получить одного врача по ID
     @GetMapping("/{id}")
     public DoctorDTO getDoctorById(@PathVariable Long id) {
-        return doctorService.getDoctorById(id);
+        observabilityService.start("controller.doctors.getById");
+        try {
+            return doctorService.getDoctorById(id);
+        } finally {
+            observabilityService.stop("controller.doctors.getById");
+        }
     }
 
-    // Создать врача
     @PostMapping
     public DoctorDTO addDoctor(@RequestBody DoctorDTO doctorDTO) {
-        return doctorService.saveDoctor(doctorDTO);
+        observabilityService.start("controller.doctors.add");
+        try {
+            return doctorService.saveDoctor(doctorDTO);
+        } finally {
+            observabilityService.stop("controller.doctors.add");
+        }
     }
 
-    // Обновить врача
     @PutMapping("/{id}")
     public DoctorDTO updateDoctor(@PathVariable Long id, @RequestBody DoctorDTO doctorDTO) {
-        return doctorService.updateDoctor(id, doctorDTO);
+        observabilityService.start("controller.doctors.update");
+        try {
+            return doctorService.updateDoctor(id, doctorDTO);
+        } finally {
+            observabilityService.stop("controller.doctors.update");
+        }
     }
 
-    // Удалить врача
     @DeleteMapping("/{id}")
     public void deleteDoctor(@PathVariable Long id) {
-        doctorService.deleteDoctor(id);
+        observabilityService.start("controller.doctors.delete");
+        try {
+            doctorService.deleteDoctor(id);
+        } finally {
+            observabilityService.stop("controller.doctors.delete");
+        }
     }
-
-    //API для проверки доступности врача
-    //@GetMapping("/available")
-    //public ResponseEntity<Boolean> checkDoctorAvailability(
-    //       @RequestParam String specialization,
-    //       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime appointmentDate) {
-    //  boolean isAvailable = doctorService.isDoctorAvailable(specialization, appointmentDate);
-    //  return ResponseEntity.ok(isAvailable);
 }
